@@ -6,6 +6,7 @@ import Home from "./pages/home/Home";
 import Product from "./pages/product/Product";
 import Category from "./pages/category/Category";
 import { Provider } from "react-redux";
+import { store } from "./store/store";
 const AppRouters = createBrowserRouter([
   {
     path: "/",
@@ -30,7 +31,7 @@ const AppRouters = createBrowserRouter([
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
-  <Provider>
+  <Provider store={store}>
     <RouterProvider router={AppRouters} />
   </Provider>
 );

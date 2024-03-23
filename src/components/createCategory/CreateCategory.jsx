@@ -1,12 +1,17 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import "./CreateCategory.css";
 import { UploadImage } from "../../helper/imageActions";
 import edit from "../../../public/svg/edit.svg";
 import deleteIcons from "../../../public/svg/delete.svg";
 import noImage from "../../../public/png/no-pictures.png";
 import Modal from "../modal/Modal";
-const CreateCategory = ({ categories }) => {
+import {
+  createCategory,
+  fetchCategories,
+} from "../../features/category/categorySlice";
+const CreateCategory = () => {
   const [csetImage, setCsetImage] = useState([]);
   const [imageobj, setImageobj] = useState([]);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
@@ -16,8 +21,12 @@ const CreateCategory = ({ categories }) => {
     image: [],
   });
   const [modal, setModal] = useState(false);
-  const [editCategory, setEditCategory] = useState();
   const fileInputRef = useRef(null);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, []);
+  // const categoriesList = useSelector((state) => state.category.categoryValue);
 
   const createCategoryHandle = (e) => {
     const { name, value } = e.target;
@@ -33,60 +42,37 @@ const CreateCategory = ({ categories }) => {
       setCsetImage((pre) => [...pre, { url: url, file: img }]);
     });
 
-    // if (uploadedImages) {
-    //   setcategoryFormData((previous) => ({
-    //     ...categoryFormData,
-    //     image: [...uploadedImages.map((item) => ({ url: item.url }))],
-    //   }));
-    // }
     setIsImageUploaded(false);
   };
 
   const submitCategory = async (e) => {
     e.preventDefault();
     try {
-      console.log(categoryFormData, "thisisuploadimages");
-
       const uploadedImages = await UploadImage(imageobj, setcategoryFormData);
-      console.log(uploadedImages, "thshfjsnfd");
       if (
         categoryFormData.categoryName === "" ||
         categoryFormData.categoryFor === ""
       ) {
-        setImageobj([])
+        setImageobj([]);
         return alert("Please fill the form");
       }
       const imageFiles = uploadedImages.map((img) => {
-        console.log(img.imageFile, "skjdfhkjsnfg");
         return { imageFile: img.imageFile };
       });
-      console.log(imageFiles, "alksdjfasldf");
-      const response = await fetch("http://localhost:3000/api/category", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: {
-            ...categoryFormData,
-            image: imageFiles,
-          },
-        }),
-      });
+      dispatch(createCategory(categoryFormData, imageFiles));
 
-      const result = await response.json();
-      console.log(result, "Response from backend");
+      setcategoryFormData({ categoryName: "", categoryFor: "", image: [] });
+      setCsetImage([]);
 
-      if (result) {
-        setcategoryFormData({ categoryName: "", categoryFor: "", image: [] });
-        setCsetImage([]);
-      }
+      return;
     } catch (error) {
       console.error("Error submitting category:", error);
     }
   };
   const handleButtonClick = () => {
-    fileInputRef.current.click(); // Trigger click event on file input
+    console.log("clicked");
+    fileInputRef.current.click();
   };
-  console.log(csetImage, "sjdfaksdjfkjasljflkdas");
   const removeImage = (i) => {
     setCsetImage((previous) => {
       return previous.filter((image, index) => {
@@ -95,24 +81,8 @@ const CreateCategory = ({ categories }) => {
     });
   };
 
-  const deleteCategory = async (id) => {
-    const response = await fetch(
-      `http://localhost:3000/api/category?_id=${id}`,
-      {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-    console.log(response, "sfdljksadfjasdlkfj");
-  };
-  const openModal = (category) => {
-    setEditCategory(category);
-    setModal(true);
-  };
-
   return (
     <div className="main_container_category">
-      {modal && <Modal category={editCategory} setModal={setModal} />}
       {/* <AdvancedImage cldImg={myImage} /> */}
       {/* {file?.image?.map((img) => {
         <img src=" alt="" />
@@ -121,6 +91,7 @@ const CreateCategory = ({ categories }) => {
         <div className="category_container_input">
           <div className="create_category_container">
             <h2>create mens categories</h2>
+
             <div className="main_container_category_eachDiv">
               <h4>category name</h4>
               <input
@@ -153,7 +124,6 @@ const CreateCategory = ({ categories }) => {
                   onChange={addImageToCloudnary}
                 />
               </button>
-              {/* <button onClick={addcategoryimagetoForm}>add category image</button> */}
             </div>
             <div className="button_container_center">
               <button
@@ -175,7 +145,6 @@ const CreateCategory = ({ categories }) => {
             <h3>category Image: </h3>
             <div className="category_input_image_container">
               {csetImage?.map((img, i) => {
-                console.log(img, "thisisfile");
                 return (
                   <div key={i} className="category_input_image">
                     <div
@@ -198,53 +167,8 @@ const CreateCategory = ({ categories }) => {
             </div>
           </div>
         </div>
-        <hr />
-        <div className="category_list_container">
-          <div>
-            <h3>categories</h3>
-          </div>
-          <div className="category_list">
-            {categories?.map((category) => {
-              return (
-                <div
-                  key={category._id}
-                  className="category_mapped_list_container"
-                >
-                  <div className="category_list_closeIcon">
-                    <img
-                      src={edit}
-                      alt="edit"
-                      width={20}
-                      height={20}
-                      onClick={() => openModal(category)}
-                    />
-                    <img
-                      onClick={() => deleteCategory(category._id)}
-                      // className="closeIcon"
-                      src={deleteIcons}
-                      alt="delete"
-                      width={20}
-                      height={20}
-                    />
-                  </div>
-                  {category?.image.length === 0 ? (
-                    <img src={noImage} alt="noImage" width={300} height={300} />
-                  ) : (
-                    <img
-                      src={category?.image[0]?.imageFile?.secure_url}
-                      alt=""
-                      width={300}
-                      height={300}
-                      className="category_list_image"
-                    />
-                  )}
-                  <h3>category name: {category.categoryName}</h3>
-                  <h3>category for: {category.categoryFor}</h3>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+       
+       
       </div>
     </div>
   );

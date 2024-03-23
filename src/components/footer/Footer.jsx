@@ -1,8 +1,9 @@
+import "./Footer.css";
 const Footer = () => {
   return (
-    <>
-      <h1>thisisfooter</h1>
-    </>
+    <div className="footer_mainContainer">
+      <p>@copy right for TheOnlineStore.com</p>
+    </div>
   );
 };
 

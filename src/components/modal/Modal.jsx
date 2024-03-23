@@ -132,7 +132,7 @@ const Modal = ({ category, setModal }) => {
 
       if (result) {
         setEditFormData({
-          categoryName: result.categroy.categoryName,
+          categoryName: result.category.categoryName,
           categoryFor: result.category.categoryFor,
           image: result.category.image,
         });
@@ -205,11 +205,13 @@ const Modal = ({ category, setModal }) => {
                               return { ...image.imageFile, id: image._id };
                             }),
                           });
+                          setCarousalCount(0);
                         });
                       }
                       setImages((pre) => {
                         return pre.filter((img) => img != image[carousalCount]);
                       });
+                      setCarousalCount(0);
                     }}
                     className="modal_editcategory_image_delete_button"
                   >
