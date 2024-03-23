@@ -4,17 +4,29 @@ import leftArrow from "../../../public/svg/leftArrow.svg";
 import rightArrow from "../../../public/svg/rightArrow.svg";
 import deleteIcons from "../../../public/svg/delete.svg";
 import noImage from "../../../public/png/no-pictures.png";
+import {
+  editCategory,
+  addEditedCategory,
+} from "../../features/category/categorySlice";
+import { useDispatch } from "react-redux";
+import AlertModal from "./alertModal/AlertModal";
+
 const Modal = ({ category, setModal }) => {
   const [isImageUploaded, setIsImageUploaded] = useState(false);
   const [carousalCount, setCarousalCount] = useState(0);
   const [image, setImages] = useState([]);
   const [editedImage, setEditedImage] = useState([]);
+  const [showAlertModal, setShowAlertModal] = useState(false);
   const [editFormData, setEditFormData] = useState({
     categoryName: "",
     categoryFor: "",
     image: [],
   });
+
   const fileInputRef = useRef(null);
+
+  const dispatch = useDispatch();
+
   useEffect(() => {
     setEditFormData((pre) => {
       return {
@@ -26,35 +38,19 @@ const Modal = ({ category, setModal }) => {
         }),
       };
     });
+
     setImages(
       category.image.map((image) => {
         return { ...image.imageFile, id: image._id };
       })
     );
   }, []);
+
   const handelEditCategory = (e) => {
     const { name, value } = e.target;
     setEditFormData({ ...editFormData, [name]: value });
     console.log(editFormData);
   };
-  console.log(editFormData, "kajflajsfknasknas");
-
-  //   const deleteImage = async (imgId, id, imgUrl) => {
-  //     const data = { imgId, id, imgUrl };
-  //     const response = await fetch(`http://localhost:3000/api/category/image`, {
-  //       method: "DELETE",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ data: data }),
-  //     });
-  //     const res = await response.json();
-  //     if (res.category) {
-  //       setEditFormData((pre) => {
-  //         return { ...pre, image: [res?.category?.image] };
-  //       });
-  //       setCarousalCount(0);
-  //     }
-  //     console.log(res, editFormData, "sfdljksadfjasdlkfj");
-  //   };
 
   const addImageToCloudnary = async (e) => {
     const images = Object.values(e.target.files);
@@ -75,77 +71,83 @@ const Modal = ({ category, setModal }) => {
         }),
       ];
     });
-    // images.map((img) => {
-    //   const url = URL.createObjectURL(img);
-    //   setCsetImage((pre) => [...pre, { url: url, file: img }]);
-    // });
-
-    // if (uploadedImages) {
-    //   setEditFormData((previous) => ({
-    //     ...editFormData,
-    //     image: [...uploadedImages.map((item) => ({ url: item.url }))],
-    //   }));
-    // }
   };
 
-  console.log(image, "asjdhfkasjdflk");
-  const editCategory = async (e) => {
+  const submitEditCategory = async (e) => {
+    let uploadedImages = [];
     e.preventDefault();
+
     try {
-      console.log("thisisuploadimages");
+      console.log(editedImage, "thisisuploadimages");
       setIsImageUploaded(true);
-      const uploadedImages = await UploadImage(editedImage);
+      if (editedImage.length) {
+        uploadedImages = await UploadImage(editedImage);
+      }
       console.log(editFormData, category, "thisisuploadimages", uploadedImages);
-      setIsImageUploaded(false);
-      //   return;
+
       if (
         editFormData.categoryName === "" ||
-        editFormData.categoryFor === ""
-        // editFormData.image.length === 0
+        (editFormData.categoryFor === "") &
+          (uploadedImages.length === 0 || editFormData.image.length === 0)
       ) {
         return alert("Please fill the form");
       }
-      const imageFiles = uploadedImages.map((img) => {
-        console.log(img.imageFile, "skjdfhkjsnfg");
-        return { imageFile: img.imageFile };
-      });
 
-      const response = await fetch("http://localhost:3000/api/category", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: {
-            form: {
-              ...editFormData,
-              image: [
-                ...editFormData?.image?.map((item) => ({ imageFile: item })),
-                ...uploadedImages.map((img) => ({ imageFile: img.imageFile })),
-              ],
-            },
-            id: category._id,
-          },
-        }),
-      });
+      dispatch(addEditedCategory(editFormData, uploadedImages, category._id));
 
-      const result = await response.json();
-      console.log(result, "Response from backend");
-
-      if (result) {
-        setEditFormData({
-          categoryName: result.category.categoryName,
-          categoryFor: result.category.categoryFor,
-          image: result.category.image,
-        });
-        // setCsetImage([]);
-        setModal(false);
-      }
+      setModal(false);
       setIsImageUploaded(false);
     } catch (error) {
       console.error("Error submitting category:", error);
     }
   };
+
+  const removeImage = () => {
+    if (image[carousalCount]?.secure_url) {
+      const editedCategory = deleteImage(
+        image[carousalCount],
+        category._id
+        // editFormData?.image[carousalCount]?.imageFile.secure_url
+      )
+        .then((res) => {
+          console.log(res, "skfjghaskdhjf");
+          setEditFormData({
+            categoryName: res?.category?.categoryName,
+            categoryFor: res?.category?.categoryFor,
+            image: res?.category?.image.map((image) => {
+              return { ...image.imageFile, id: image._id };
+            }),
+          });
+          setImages(
+            res?.category?.image.map((image) => {
+              return { ...image.imageFile, id: image._id };
+            })
+          );
+          dispatch(editCategory(res.category));
+          setCarousalCount(0);
+          setShowAlertModal((pre) => !pre);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    } else {
+      setImages((pre) => {
+        return pre.filter((img) => img != image[carousalCount]);
+      });
+      setCarousalCount(0);
+
+      setShowAlertModal((pre) => !pre);
+    }
+  };
   return (
     <>
+      {showAlertModal && (
+        <AlertModal
+          show={setShowAlertModal}
+          success={removeImage}
+          alertmsg={"Are you sure to delete this Image?"}
+        />
+      )}
       <div className="edit_category_modal_container">
         <div className="edit_category_modal">
           <h2>create mens categories</h2>
@@ -190,29 +192,7 @@ const Modal = ({ category, setModal }) => {
                 />
                 <div className="modal_image_container">
                   <div
-                    onClick={() => {
-                      if (image[carousalCount]?.secure_url) {
-                        const editedCategory = deleteImage(
-                          image[carousalCount],
-                          category._id
-                          // editFormData?.image[carousalCount]?.imageFile.secure_url
-                        ).then((res) => {
-                          console.log(res, "skfjghaskdhjf");
-                          setEditFormData({
-                            categoryName: res?.category?.categoryName,
-                            categoryFor: res?.category?.categoryFor,
-                            image: res?.category?.image.map((image) => {
-                              return { ...image.imageFile, id: image._id };
-                            }),
-                          });
-                          setCarousalCount(0);
-                        });
-                      }
-                      setImages((pre) => {
-                        return pre.filter((img) => img != image[carousalCount]);
-                      });
-                      setCarousalCount(0);
-                    }}
+                    onClick={() => setShowAlertModal(!showAlertModal)}
                     className="modal_editcategory_image_delete_button"
                   >
                     <img
@@ -272,11 +252,10 @@ const Modal = ({ category, setModal }) => {
                 onChange={addImageToCloudnary}
               />
             </button>
-            {/* <button onClick={addcategoryimagetoForm}>add category image</button> */}
           </div>
           <div className="button_container_center">
             <button
-              onClick={editCategory}
+              onClick={submitEditCategory}
               style={
                 isImageUploaded
                   ? { background: "red", cursor: "not-allowed" }

@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   createNewCategory,
   deleteCategory,
+  editCategorys,
   getCategories,
 } from "../../api/category/categoryApi";
 const initialState = {
@@ -25,6 +26,12 @@ export const categorySlice = createSlice({
       console.log(action.payload, "thisisconsolechain");
       state.categoryValue = state.categoryValue.filter(
         (item) => item._id !== action.payload
+      );
+    },
+    editCategory: (state, action) => {
+      console.log(action.payload, "thisiscationdotpayload");
+      state.categoryValue = state.categoryValue.map((item) =>
+        item._id === action.payload._id ? action.payload : item
       );
     },
   },
@@ -57,7 +64,17 @@ export const removeCategory = (id) => async (dispatch) => {
     console.log(error);
   }
 };
-export const { setCategories, addCategory, filterCategory } =
+export const addEditedCategory =
+  (formdata, image, categoryId) => async (dispatch) => {
+    try {
+      const result = await editCategorys(formdata, image, categoryId);
+      console.log(result.category, "Responsefrombackend");
+      dispatch(editCategory(result.category));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+export const { setCategories, addCategory, filterCategory, editCategory } =
   categorySlice.actions;
 
 export default categorySlice.reducer;

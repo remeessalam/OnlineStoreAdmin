@@ -1,21 +1,43 @@
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { removeCategory } from "../../features/category/categorySlice";
 import edit from "../../../public/svg/edit.svg";
 import deleteIcons from "../../../public/svg/delete.svg";
 import noImage from "../../../public/png/no-pictures.png";
 import "./Categories.css";
+import AlertModal from "../modal/alertModal/AlertModal";
+
 const Categories = ({ categories, setEditCategory, setModal }) => {
-  console.log("kjasflajnsnkjafg");
-  console.log(categories, "kjasflajnsnkjafg");
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [categoryId, setCategoryId] = useState();
+
+  useEffect(() => {
+    return setCategoryId();
+  }, []);
+
   const dispatch = useDispatch();
+
   const openModal = (category) => {
     setEditCategory(category);
     setModal(true);
   };
+
+  const deleteCategory = () => {
+    dispatch(removeCategory(categoryId));
+    setShowAlertModal((pre) => !pre);
+  };
+
   return (
     <div className="category_list_container">
-      <div>
-        <h3>categories</h3>
+      {showAlertModal && (
+        <AlertModal
+          show={setShowAlertModal}
+          success={deleteCategory}
+          alertmsg={"Are you sure to delete this Category?"}
+        />
+      )}
+      <div className="Category_Heading">
+        <h4>categories</h4>
       </div>
       <div className="category_list">
         {categories?.map((category) => {
@@ -30,7 +52,10 @@ const Categories = ({ categories, setEditCategory, setModal }) => {
                   onClick={() => openModal(category)}
                 />
                 <img
-                  onClick={() => dispatch(removeCategory(category._id))}
+                  onClick={() => {
+                    setCategoryId(category._id);
+                    setShowAlertModal(!showAlertModal);
+                  }}
                   // className="closeIcon"
                   src={deleteIcons}
                   alt="delete"

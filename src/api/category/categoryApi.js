@@ -30,3 +30,24 @@ export const deleteCategory = async (id) => {
   console.log(response, "sfdljksadfjasdlkfj");
   return await response.json();
 };
+
+export const editCategorys = async (formdata, images, categoryId) => {
+  const response = await fetch("http://localhost:3000/api/category", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      data: {
+        form: {
+          ...formdata,
+          image: [
+            ...formdata?.image?.map((item) => ({ imageFile: item })),
+            ...images.map((img) => ({ imageFile: img.imageFile })),
+          ],
+        },
+        id: categoryId,
+      },
+    }),
+  });
+  console.log(response);
+  return await response.json();
+};
