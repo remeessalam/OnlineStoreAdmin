@@ -19,6 +19,7 @@ export const createNewCategory = async (formdata, image) => {
       },
     }),
   });
+  // console.log(await category.json());
   return await category.json();
 };
 

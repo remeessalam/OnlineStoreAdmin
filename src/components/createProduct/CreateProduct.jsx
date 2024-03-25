@@ -1,5 +1,14 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import "./CreateProduct.css";
+import deleteIcon from "../../../public/svg/delete.svg";
+import Chip from "@mui/material/Chip";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import OutlinedInput from "@mui/material/OutlinedInput";
+import { FormControl } from "@mui/material";
+import { UploadImage } from "../../helper/imageActions";
+
 const CreateProduct = ({ products, categories }) => {
   console.log(products, categories);
   const [formData, setFormData] = useState({
@@ -10,16 +19,29 @@ const CreateProduct = ({ products, categories }) => {
     productDetails: "",
     productDescription: "",
     image: [],
+    tag: [],
     categoryOf: "",
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState({
+    productName: "",
+    price: "",
+    sizeChart: "",
+    stockCount: "",
+    productDetails: "",
+    productDescription: "",
+    image: "",
+    tag: "",
+    categoryOf: "",
+  });
   const [sizeChart, setSizeChart] = useState({
     size: "",
     stock: "",
   });
-  const [setImage, setSetImage] = useState({});
+  const [tag, setTag] = useState();
+  const [setImage, setSetImage] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
 
+  const fileInputRef = useRef(null);
   const addImageToFormData = (e) => {
     e.preventDefault();
 
@@ -33,47 +55,81 @@ const CreateProduct = ({ products, categories }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if ((value <= 0 && value === "-1") || value === "00") {
+    //cheacking input number is not less than 0
+    if (
+      (value <= 0 && value === "-1") ||
+      value === "" ||
+      value.startsWith("0")
+    ) {
       return;
     }
+
     setFormData({ ...formData, [name]: value });
   };
+  const addTags = (e) => {
+    const { name } = e.target;
+
+    setFormData({ ...formData, tag: [...formData?.tag, { tag: tag }] });
+    setTag("");
+  };
+  console.log(formData, tag, "kjasfkaksfhhasfdk");
   const addsizeChart = (e) => {
     const { name, value } = e.target;
-    if ((value <= 0 && value === "-1") || value === "00") return;
+    console.log(value, !isNaN(value), "akjsdfalkejfhlahjsdf");
+    if (value === "" || value.startsWith("0")) {
+      setSizeChart({ ...sizeChart, [name]: "" });
+      return;
+    }
 
     setSizeChart({ ...sizeChart, [name]: value });
   };
   const handleSizeChart = (e) => {
     e.preventDefault();
+    if (sizeChart.size === "" || sizeChart.stock === "") return;
     const newSizeChart = [...formData.sizeChart, sizeChart];
-    setFormData({ ...formData, sizeChart: newSizeChart });
+
+    const totalStockCount = newSizeChart.reduce(
+      (total, item) => total + parseInt(item.stock),
+      0
+    );
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      sizeChart: newSizeChart,
+      stockCount: totalStockCount,
+    }));
+
     setSizeChart({ size: "", stock: "" });
   };
   const handleImageChange = (e) => {
-    const { name, value } = e.target;
-    setSetImage({ url: value });
+    const images = Object.values(e.target.files);
+    if (images.length > 2) {
+      setError((pre) => ({ ...pre, image: "only two image can add" }));
+    }
+    console.log(images, "laksjdhfkasndfknasdkfn");
+    images.map((image) => {
+      const url = URL.createObjectURL(image);
+      console.log(url, "askdjfalksdjnflkasndf");
+      return url;
+    });
+    setSetImage(images);
   };
 
   const addproduct = async (e) => {
     e.preventDefault();
-    if (
-      formData.productName === "" ||
-      formData.price === "" ||
-      formData.sizeChart.length === 0 ||
-      formData.stockCount === "" ||
-      formData.productDetails === "" ||
-      formData.productDescription === "" ||
-      formData.image.length === 0 ||
-      formData.categoryOf === ""
-    ) {
-      console.log(formData, "herereturns");
-      return;
-    }
-
+    // if (Object.values(formData).map((value) => value.length === 0 && true)) {
+    //   console.log(formData, error, "c");
+    //   return;
+    // }
+    const uploadedImages = await UploadImage(setImage);
+    console.log(uploadedImages, "ghasldjflkjsdflkj");
+    const imageFiles = uploadedImages.map((img) => {
+      return { imageFile: img.imageFile };
+    });
     const data = {
       ...formData,
       categoryOf: formData?.categoryOf?.split("_")[1],
+      image: imageFiles,
     };
     console.log(data, "asfasjdfasfdjk");
     const response = await fetch("http://localhost:3000/api/product", {
@@ -90,6 +146,15 @@ const CreateProduct = ({ products, categories }) => {
       categoryOf: selectedCategory,
     });
   };
+
+  const handleImageUpload = (e) => {
+    // e.preventDefault();
+    console.log("imagebuttonclicked");
+    fileInputRef.current.click();
+  };
+
+  console.log(formData, "kajsdhflkjasndfknaskdjf");
+
   return (
     <>
       <div className="main_container_product">
@@ -100,7 +165,6 @@ const CreateProduct = ({ products, categories }) => {
             action=""
             // className="flex flex-col flex-wrap items-start justify-center m-2 p-3 gap-4"
           >
-            <h1 className="error">{error}</h1>
             <h1>create product</h1>
             <div className="form_each_div">
               <h4>product name</h4>
@@ -112,6 +176,7 @@ const CreateProduct = ({ products, categories }) => {
                 onChange={handleChange}
               />
             </div>
+            {/* <p>{error.productName && error.productName}</p> */}
             <div className="form_each_div">
               <h4>price</h4>
               <input
@@ -142,6 +207,56 @@ const CreateProduct = ({ products, categories }) => {
                 add size chart
               </button>
             </div>
+            <div className="createCategory_formdata_view_mapping">
+              sizeChart:{" "}
+              {formData?.sizeChart.map((item, i) => {
+                return (
+                  <div
+                    key={i}
+                    className="createCategory_formdata_view_mapping_sizechart_item"
+                  >
+                    <Chip
+                      key={i}
+                      label={`stock: ${item.size} size: ${item.stock}`}
+                      variant="outlined"
+                      onDelete={() => {
+                        setFormData((prevFormData) => {
+                          const newStockCount =
+                            prevFormData.stockCount - parseInt(item.stock);
+
+                          const newSizeChart = prevFormData.sizeChart.filter(
+                            (existingChart) => {
+                              return (
+                                existingChart.size !== item.size ||
+                                existingChart.stock !== item.stock
+                              );
+                            }
+                          );
+
+                          return {
+                            ...prevFormData,
+                            sizeChart: newSizeChart,
+                            stockCount: newStockCount,
+                          };
+                        });
+                        // setFormData((prevFormData) => ({
+                        //   ...prevFormData,
+                        //   sizeChart: prevFormData.sizeChart.filter(
+                        //     (existingChart) => {
+                        //       return (
+                        //         existingChart.size !== item.size ||
+                        //         existingChart.stock !== item.stock
+                        //       );
+                        //     }
+                        //   ),
+                        // }));
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
             <div className="form_each_div">
               <h4>stock count</h4>
               <input
@@ -170,108 +285,135 @@ const CreateProduct = ({ products, categories }) => {
               />
             </div>
             <div className="form_each_div">
-              <h4>image</h4>
+              <h4>tag</h4>
               <input
                 type="text"
-                name="image"
-                value={formData?.image?.url}
-                onChange={handleImageChange}
+                name="tag"
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
               />
-              <button onClick={(e) => addImageToFormData(e)}>
-                add to form data
-              </button>
+              <button onClick={addTags}>add Tag</button>
+            </div>
+            <div className="createCategory_formdata_view_mapping">
+              tag:{" "}
+              <div>
+                {formData?.tag?.map((tag, i) => {
+                  console.log(tag, "askdfjjkashfkjhfgkajs");
+                  return (
+                    <>
+                      <Chip
+                        key={i}
+                        label={tag.tag}
+                        variant="outlined"
+                        onDelete={() => {
+                          setFormData((pre) => ({
+                            ...pre,
+                            tag: pre.tag.filter(
+                              (existingTag) => existingTag.tag !== tag.tag
+                            ),
+                          }));
+                        }}
+                      />
+                    </>
+                  );
+                })}
+              </div>
             </div>
             <div className="form_each_div">
               <h4>category of</h4>
-
-              <select
-                id="category"
-                name="category"
-                onChange={(e) => {
-                  console.log(e.target.value, "askjdfaksdfasfah");
-                  return setSelectedCategory(e.target.value);
-                }}
-                value={selectedCategory}
-              >
-                {categories?.map((category) => (
-                  <option
-                    key={category._id}
-                    value={`${category.categoryName}_${category._id}`}
-                  >
-                    {category.categoryName}
-                  </option>
-                ))}
-              </select>
-              <button onClick={handleSubmit}>Submit</button>
+              <FormControl fullWidth>
+                <InputLabel id="demo-simple-select-label">
+                  categories
+                </InputLabel>
+                <Select
+                  sx={{
+                    minWidth: 120,
+                  }}
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={formData?.categoryOf?.split("_")[1]}
+                  label="categories"
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      categoryOf: e.target.value,
+                    });
+                  }}
+                  MenuProps={{
+                    sx: {
+                      "& .MuiList-root": {
+                        display: "flex",
+                        flexDirection: "column",
+                      },
+                    },
+                  }}
+                >
+                  {categories?.map((category) => (
+                    <MenuItem
+                      sx={{
+                        background: "white",
+                        width: "100%",
+                        borderRadius: "9px",
+                        color: "black",
+                      }}
+                      key={category._id}
+                      value={`${category.categoryName}_${category._id}`}
+                    >
+                      {category.categoryName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </div>
-
+            <div className="form_each_div">
+              <h4>image</h4>
+              <button onClick={handleImageUpload}>
+                upload images
+                <input
+                  id="fileInput"
+                  style={{ display: "none" }}
+                  type="file"
+                  name="image"
+                  multiple
+                  value={formData?.image?.url}
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                />
+              </button>
+              {/* <button onClick={(e) => addImageToFormData(e)}>
+                add to form data
+              </button> */}
+            </div>
+            <p>{error.image && error.image}</p>
+            <div className="createCategory_formdata_view_mapping">
+              image:{" "}
+              <div>
+                {setImage.map((image, i) => {
+                  console.log(image, "ksdjfasjdfljalsfd");
+                  return (
+                    <div
+                      key={i}
+                      className="bg-blue-600 text-white p-2 gap-2 rounded-md"
+                    >
+                      <img
+                        src={deleteIcon}
+                        alt="delete"
+                        width={15}
+                        height={15}
+                      />
+                      <img
+                        src={URL.createObjectURL(image)}
+                        alt="product-image"
+                        width={300}
+                        height={300}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             <button type="submit">create product</button>
           </form>
-          <div className=" product_details_container">
-            <h3 className="flex gap-6">productName: {formData.productName}</h3>
-            <h3>price: {formData.price}</h3>
-            <h3 className="flex flex-row flex-wrap gap-2">
-              sizeChart:{" "}
-              {formData?.sizeChart.map((item, i) => {
-                return (
-                  <div
-                    key={i}
-                    className="bg-blue-600 text-white p-2 gap-2 rounded-md"
-                  >
-                    <h3>stock: {item.stock}</h3>
-                    <h3>size: {item.size}</h3>
-                  </div>
-                );
-              })}
-            </h3>
-            <h3>stockCount: {formData.stockCount}</h3>
-            <h3>productDetails: {formData.productDetails}</h3>
-            <h3>productDescription: {formData.productDescription}</h3>
-            <h3 className="flex flex-row flex-wrap gap-2">
-              image:{" "}
-              {formData?.image.map((item, i) => {
-                return (
-                  <div
-                    key={i}
-                    className="bg-blue-600 text-white p-2 gap-2 rounded-md"
-                  >
-                    <h3>url: {item.url}</h3>
-                  </div>
-                );
-              })}
-            </h3>
-            <h3>categoryOf: {formData.categoryOf.split("_")[0]}</h3>
-          </div>
-        </div>
-        <div className="product_list_container">
-          {products?.map((product) => {
-            return (
-              <div className="product_items" key={product._id}>
-                <div>
-                  {product.image.map((img) => {
-                    return (
-                      <img key={img._id} src={img.url} alt="product-image" />
-                    );
-                  })}
-                </div>
-                <h3>{product.productName}</h3>
-                <h3>{product.price.$numberDecimal}</h3>
-                <div className="product_sizeChart_Container">
-                  {product.sizeChart.map((sizes) => {
-                    return (
-                      <div className="product_sizeChart_items" key={sizes._id}>
-                        <h4>{sizes.size}</h4>
-                        <h4>{sizes.stock}</h4>
-                      </div>
-                    );
-                  })}
-                </div>
-                <h3>{product.productDetails}</h3>
-                <h3>{product.productDescription}</h3>
-                <h3>{product.stockCount}</h3>
-              </div>
-            );
-          })}
         </div>
       </div>
     </>

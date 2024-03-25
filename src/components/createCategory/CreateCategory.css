@@ -21,7 +21,7 @@ input:focus {
   outline: none;
 }
 button {
-  background-color: rgb(38, 38, 207);
+  background-color: blue;
   color: white;
   border-radius: 6px;
   padding: 1px 15px;
@@ -68,71 +68,28 @@ h4 {
   padding: 3px;
 }
 
-.category_input_image {
+.category_input_image_list {
+  display: flex;
+  justify-content: end;
+  flex-direction: column;
   width: 300px;
   height: 300px;
-  border-radius: 12px;
+  align-items: end;
+  /* background-color: rgb(225, 190, 190); */
+  /* border-radius: 6px; */
   overflow: hidden;
 }
 
-.category_input_image img {
+.category_input_image {
   object-fit: cover;
+  /* border-radius: 6px; */
 }
 
-.category_list_closeIcon img {
+/* .category_list_closeIcon img {
   cursor: pointer;
-}
+} */
 
-.edit_category_modal_container {
-  width: 100%;
-  height: 100%;
-  position: fixed;
-  left: 0;
-  top: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-.edit_category_modal {
-  width: 500px;
-  min-height: 500px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  background-color: burlywood;
-  overflow: hidden;
-  gap: 10px;
-  padding: 15px;
-}
-
-.modal_container_category_eachDiv {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
-.modal_image_carousal_container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-}
-.modal_editcategory_image_delete_button {
-  position: absolute;
-  right: 3px;
-  top: 3px;
-  background-color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 25px;
-  height: 25px;
-  cursor: pointer;
-}
-.modal_image_container {
-  position: relative;
-}
+/* .main_container_snackbar {
+  background-color: brown;
+  color: white;
+} */

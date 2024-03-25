@@ -1,0 +1,51 @@
+.button_container_button {
+    background: blue;
+    cursor: pointer;
+    width: 150px;
+    height: 30px;
+  }
+  .button_container_button_loading {
+    background: none;
+    cursor: progress;
+    position: relative;
+    width: 150px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid black;
+  }
+
+
+@keyframes wave {
+    0% {
+      transform: translateY(-5px);
+    }
+    50% {
+      transform: translateY(5px);
+    }
+    100% {
+      transform: translateY(-5px);
+    }
+  }
+  
+  .dot1,
+  .dot2,
+  .dot3 {
+    width: 10px;
+    height: 10px;
+    background-color: black;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 3px;
+    animation: wave 1s infinite ease-in-out;
+  }
+  
+  .dot1 {
+    animation-delay: -0.2s;
+  }
+  
+  .dot2 {
+    animation-delay: -0.1s;
+  }
+  

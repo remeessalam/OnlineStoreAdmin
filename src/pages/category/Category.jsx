@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Categories from "../../components/categories/categories";
 import CreateCategory from "../../components/createCategory/CreateCategory";
-import Modal from "../../components/modal/Modal";
+import Modal from "../../components/modal/modal/Modal";
 const Category = () => {
   const [modal, setModal] = useState(false);
   const [editCategory, setEditCategory] = useState();

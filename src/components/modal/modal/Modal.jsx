@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { UploadImage, deleteImage } from "../../helper/imageActions";
-import leftArrow from "../../../public/svg/leftArrow.svg";
-import rightArrow from "../../../public/svg/rightArrow.svg";
-import deleteIcons from "../../../public/svg/delete.svg";
-import noImage from "../../../public/png/no-pictures.png";
+import { UploadImage, deleteImage } from "../../../helper/imageActions";
+import leftArrow from "../../../../public/svg/leftArrow.svg";
+import rightArrow from "../../../../public/svg/rightArrow.svg";
+import deleteIcons from "../../../../public/svg/delete.svg";
+import noImage from "../../../../public/png/no-pictures.png";
 import {
   editCategory,
   addEditedCategory,
-} from "../../features/category/categorySlice";
+} from "../../../features/category/categorySlice";
 import { useDispatch } from "react-redux";
-import AlertModal from "./alertModal/AlertModal";
+import AlertModal from "../alertModal/AlertModal";
+import "./Modal.css";
+import ConfirmButton from "../../confirmButton/ConfirmButton";
+import Alert from "@mui/material/Alert";
 
 const Modal = ({ category, setModal }) => {
   const [isImageUploaded, setIsImageUploaded] = useState(false);
@@ -17,6 +20,11 @@ const Modal = ({ category, setModal }) => {
   const [image, setImages] = useState([]);
   const [editedImage, setEditedImage] = useState([]);
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [error] = useState({
+    categoryName: "Please enter category name!",
+    categoryFor: "Please enter category for!",
+    image: "Please add image!",
+  });
   const [editFormData, setEditFormData] = useState({
     categoryName: "",
     categoryFor: "",
@@ -44,6 +52,11 @@ const Modal = ({ category, setModal }) => {
         return { ...image.imageFile, id: image._id };
       })
     );
+
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, []);
 
   const handelEditCategory = (e) => {
@@ -78,20 +91,22 @@ const Modal = ({ category, setModal }) => {
     e.preventDefault();
 
     try {
+      if (
+        editedImage.length === 0 &&
+        editFormData.image.length === 0 &&
+        image.length === 0
+      ) {
+        return;
+      }
+      if (editFormData.categoryName === "" || editFormData.categoryFor === "") {
+        return;
+      }
       console.log(editedImage, "thisisuploadimages");
       setIsImageUploaded(true);
       if (editedImage.length) {
         uploadedImages = await UploadImage(editedImage);
       }
       console.log(editFormData, category, "thisisuploadimages", uploadedImages);
-
-      if (
-        editFormData.categoryName === "" ||
-        (editFormData.categoryFor === "") &
-          (uploadedImages.length === 0 || editFormData.image.length === 0)
-      ) {
-        return alert("Please fill the form");
-      }
 
       dispatch(addEditedCategory(editFormData, uploadedImages, category._id));
 
@@ -145,7 +160,7 @@ const Modal = ({ category, setModal }) => {
         <AlertModal
           show={setShowAlertModal}
           success={removeImage}
-          alertmsg={"Are you sure to delete this Image?"}
+          alertmsg={`Are you sure to delete this Image? It will remove from the server also!`}
         />
       )}
       <div className="edit_category_modal_container">
@@ -159,6 +174,9 @@ const Modal = ({ category, setModal }) => {
               value={editFormData.categoryName}
               onChange={handelEditCategory}
             />
+            <p className="modal_error">
+              {editFormData.categoryName.length === 0 && error.categoryName}
+            </p>
           </div>
           <div className="modal_container_category_eachDiv">
             <h4>category for</h4>
@@ -168,6 +186,9 @@ const Modal = ({ category, setModal }) => {
               value={editFormData.categoryFor}
               onChange={handelEditCategory}
             />
+            <p className="modal_error">
+              {editFormData.categoryFor.length === 0 && error.categoryFor}
+            </p>
           </div>
           <div className="modal_container_category_eachDiv">
             <h4>category image</h4>
@@ -252,22 +273,27 @@ const Modal = ({ category, setModal }) => {
                 onChange={addImageToCloudnary}
               />
             </button>
+            {
+              <p className="modal_error">
+                {editedImage.length === 0 &&
+                  editFormData.image.length === 0 &&
+                  image.length === 0 &&
+                  error.image}
+              </p>
+            }
           </div>
           <div className="button_container_center">
-            <button
-              onClick={submitEditCategory}
-              style={
-                isImageUploaded
-                  ? { background: "red", cursor: "not-allowed" }
-                  : { background: "blue" }
-              }
-            >
-              Create Category
-            </button>
+            <ConfirmButton
+              fun={submitEditCategory}
+              condition={isImageUploaded}
+              text={"Create Category"}
+            />
+
             <button
               onClick={() => {
                 setModal((pre) => !pre);
               }}
+              className="modal_cancel_button"
             >
               cancel
             </button>

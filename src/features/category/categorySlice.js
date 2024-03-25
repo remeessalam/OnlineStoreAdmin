@@ -18,6 +18,7 @@ export const categorySlice = createSlice({
       state.categoryValue = action.payload.categories;
     },
     addCategory: (state, action) => {
+      console.log(action.payload, "kdjgfkasljfalksfg");
       if (action.payload) {
         state.categoryValue = [...state.categoryValue, action.payload];
       }
@@ -48,9 +49,12 @@ export const fetchCategories = () => async (dispatch) => {
 };
 export const createCategory = (formdata, image) => async (dispatch) => {
   try {
-    const { result } = await createNewCategory(formdata, image);
-    console.log(createCategory, "thisiscreatedcategory");
-    dispatch(addCategory(result));
+    const result = await createNewCategory(formdata, image);
+    console.log(result, "thisiscreatedcategory");
+    if (!result.status) {
+      return result;
+    }
+    dispatch(addCategory(result.result));
   } catch (error) {
     console.error("Error fetching categories:", error);
   }

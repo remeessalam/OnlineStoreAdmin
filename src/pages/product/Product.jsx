@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import CreateProduct from "../../components/createProduct/CreateProduct";
+import Products from "../../components/products/Products";
 
 const Product = () => {
   const [products, setProducts] = useState();
@@ -29,6 +30,7 @@ const Product = () => {
   return (
     <div>
       <CreateProduct products={products} categories={categories} />
+      <Products products={products}/>
     </div>
   );
 };
