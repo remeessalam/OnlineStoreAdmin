@@ -8,6 +8,7 @@ import Select from "@mui/material/Select";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { FormControl } from "@mui/material";
 import { UploadImage } from "../../helper/imageActions";
+import ConfirmButton from "../confirmButton/ConfirmButton";
 
 const CreateProduct = ({ products, categories }) => {
   console.log(products, categories);
@@ -22,26 +23,16 @@ const CreateProduct = ({ products, categories }) => {
     tag: [],
     categoryOf: "",
   });
-  const [error, setError] = useState({
-    productName: "",
-    price: "",
-    sizeChart: "",
-    stockCount: "",
-    productDetails: "",
-    productDescription: "",
-    image: "",
-    tag: "",
-    categoryOf: "",
-  });
+  const [error, setError] = useState("");
   const [sizeChart, setSizeChart] = useState({
     size: "",
     stock: "",
   });
   const [tag, setTag] = useState();
   const [setImage, setSetImage] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
-
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const [imageError, setImageError] = useState("");
   const addImageToFormData = (e) => {
     e.preventDefault();
 
@@ -56,11 +47,7 @@ const CreateProduct = ({ products, categories }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     //cheacking input number is not less than 0
-    if (
-      (value <= 0 && value === "-1") ||
-      value === "" ||
-      value.startsWith("0")
-    ) {
+    if ((value <= 0 && value === "-1") || value.startsWith("0")) {
       return;
     }
 
@@ -68,6 +55,7 @@ const CreateProduct = ({ products, categories }) => {
   };
   const addTags = (e) => {
     const { name } = e.target;
+    if (!tag) return;
 
     setFormData({ ...formData, tag: [...formData?.tag, { tag: tag }] });
     setTag("");
@@ -104,8 +92,11 @@ const CreateProduct = ({ products, categories }) => {
   const handleImageChange = (e) => {
     const images = Object.values(e.target.files);
     if (images.length > 2) {
-      setError((pre) => ({ ...pre, image: "only two image can add" }));
+      setImageError("only two image can add");
+      return;
     }
+    setImageError("");
+
     console.log(images, "laksjdhfkasndfknasdkfn");
     images.map((image) => {
       const url = URL.createObjectURL(image);
@@ -117,34 +108,84 @@ const CreateProduct = ({ products, categories }) => {
 
   const addproduct = async (e) => {
     e.preventDefault();
-    // if (Object.values(formData).map((value) => value.length === 0 && true)) {
-    //   console.log(formData, error, "c");
-    //   return;
-    // }
-    const uploadedImages = await UploadImage(setImage);
-    console.log(uploadedImages, "ghasldjflkjsdflkj");
-    const imageFiles = uploadedImages.map((img) => {
-      return { imageFile: img.imageFile };
-    });
-    const data = {
-      ...formData,
-      categoryOf: formData?.categoryOf?.split("_")[1],
-      image: imageFiles,
-    };
-    console.log(data, "asfasjdfasfdjk");
-    const response = await fetch("http://localhost:3000/api/product", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: data }),
-    });
-  };
-  const handleSubmit = (e) => {
-    e.preventDefault();
+    try {
+      setIsUploading(true);
+      if (
+        formData.productName === "" ||
+        formData.price === "" ||
+        formData.sizeChart.length === 0 ||
+        formData.stockCount === "" ||
+        formData.productDetails === "" ||
+        formData.productDescription === "" ||
+        formData.tag.length === 0 ||
+        formData.categoryOf === "" ||
+        setImage.length === 0
+      ) {
+        setError(
+          "Oops! It looks like this field is empty. Please fill it in to continue."
+        );
+        setSetImage([]);
+        return;
+      }
+      let uploadedImages;
+      if (setImage) {
+        uploadedImages = await UploadImage(setImage);
+        setFormData((pre) => {
+          return {
+            ...pre,
+            image: uploadedImages.map((img) => ({ imageFile: img.imageFile })),
+          };
+        });
+      } else {
+        setIsUploading(false);
+        return;
+      }
+      console.log({ ...formData }, "ladsjflasjdlfjalsdjf");
+      // if (Object.values(formData).some((value) => value.length === 0)) {
+      //   const newError = { ...error };
+      //   Object.entries(formData).forEach(([key, value]) => {
+      //     console.log(key, value, "slfghljsngljnsdglglfgj");
 
-    setFormData({
-      ...formData,
-      categoryOf: selectedCategory,
-    });
+      //     if (value.length === 0) {
+      //       newError[key] = `Please enter ${key}`;
+      //       setIsUploading(false);
+      //     } else {
+      //       newError[key] = ""; // Clear error message if the value is filled
+      //     }
+      //   });
+      //   setError(newError);
+      //   console.log(newError, formData, "c");
+      //   return;
+      // }
+
+      const data = {
+        ...formData,
+        categoryOf: formData?.categoryOf?.split("_")[1],
+        image: uploadedImages.map((img) => ({ imageFile: img.imageFile })),
+      };
+      console.log(data, "asfasjdfasfdjk");
+      const res = await fetch("http://localhost:3000/api/product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: data }),
+      });
+      const response = await res.json();
+      if (response.status) {
+        setFormData({
+          productName: "",
+          price: "",
+          sizeChart: [],
+          stockCount: "",
+          productDetails: "",
+          productDescription: "",
+          image: [],
+          tag: [],
+          categoryOf: "",
+        });
+        setSetImage([]);
+      }
+      setIsUploading(false);
+    } catch (err) {}
   };
 
   const handleImageUpload = (e) => {
@@ -176,7 +217,9 @@ const CreateProduct = ({ products, categories }) => {
                 onChange={handleChange}
               />
             </div>
-            {/* <p>{error.productName && error.productName}</p> */}
+            <p className="createProduct_error">
+              {formData.productName.length === 0 && error}
+            </p>
             <div className="form_each_div">
               <h4>price</h4>
               <input
@@ -186,6 +229,9 @@ const CreateProduct = ({ products, categories }) => {
                 onChange={handleChange}
               />
             </div>
+            <p className="createProduct_error">
+              {formData.price.length === 0 && error}
+            </p>
             <div className="form_each_div">
               <h4>size chart</h4>
               <input
@@ -201,14 +247,18 @@ const CreateProduct = ({ products, categories }) => {
                 onChange={addsizeChart}
               />
               <button
+                type="button"
                 onClick={handleSizeChart}
                 className="bg-blue-900 text-white rounded-md pt-1 pb-1 pl-5 pr-5 "
               >
                 add size chart
               </button>
             </div>
+            {/* <p className="createProduct_error">
+              {sizeChart.size.length === 0 && error.categoryName}
+            </p> */}
             <div className="createCategory_formdata_view_mapping">
-              sizeChart:{" "}
+              sizeChart:
               {formData?.sizeChart.map((item, i) => {
                 return (
                   <div
@@ -239,24 +289,15 @@ const CreateProduct = ({ products, categories }) => {
                             stockCount: newStockCount,
                           };
                         });
-                        // setFormData((prevFormData) => ({
-                        //   ...prevFormData,
-                        //   sizeChart: prevFormData.sizeChart.filter(
-                        //     (existingChart) => {
-                        //       return (
-                        //         existingChart.size !== item.size ||
-                        //         existingChart.stock !== item.stock
-                        //       );
-                        //     }
-                        //   ),
-                        // }));
                       }}
                     />
                   </div>
                 );
               })}
             </div>
-
+            <p className="createProduct_error">
+              {formData?.sizeChart.length === 0 && error}
+            </p>
             <div className="form_each_div">
               <h4>stock count</h4>
               <input
@@ -266,6 +307,9 @@ const CreateProduct = ({ products, categories }) => {
                 onChange={handleChange}
               />
             </div>
+            <p className="createProduct_error">
+              {formData.stockCount.length === 0 && error}
+            </p>
             <div className="form_each_div">
               <h4>product details</h4>
               <input
@@ -275,6 +319,9 @@ const CreateProduct = ({ products, categories }) => {
                 onChange={handleChange}
               />
             </div>
+            <p className="createProduct_error">
+              {formData.productDetails.length === 0 && error}
+            </p>
             <div className="form_each_div">
               <h4>product description</h4>
               <input
@@ -284,6 +331,9 @@ const CreateProduct = ({ products, categories }) => {
                 onChange={handleChange}
               />
             </div>
+            <p className="createProduct_error">
+              {formData.productDescription.length === 0 && error}
+            </p>
             <div className="form_each_div">
               <h4>tag</h4>
               <input
@@ -292,10 +342,12 @@ const CreateProduct = ({ products, categories }) => {
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
               />
-              <button onClick={addTags}>add Tag</button>
+              <button type="button" onClick={addTags}>
+                add Tag
+              </button>
             </div>
             <div className="createCategory_formdata_view_mapping">
-              tag:{" "}
+              tag:
               <div>
                 {formData?.tag?.map((tag, i) => {
                   console.log(tag, "askdfjjkashfkjhfgkajs");
@@ -319,6 +371,9 @@ const CreateProduct = ({ products, categories }) => {
                 })}
               </div>
             </div>
+            <p className="createProduct_error">
+              {formData?.tag.length === 0 && error}
+            </p>
             <div className="form_each_div">
               <h4>category of</h4>
               <FormControl fullWidth>
@@ -365,9 +420,12 @@ const CreateProduct = ({ products, categories }) => {
                 </Select>
               </FormControl>
             </div>
+            <p className="createProduct_error">
+              {formData?.categoryOf.length === 0 && error}
+            </p>
             <div className="form_each_div">
               <h4>image</h4>
-              <button onClick={handleImageUpload}>
+              <button type="button" onClick={handleImageUpload}>
                 upload images
                 <input
                   id="fileInput"
@@ -384,11 +442,10 @@ const CreateProduct = ({ products, categories }) => {
                 add to form data
               </button> */}
             </div>
-            <p>{error.image && error.image}</p>
             <div className="createCategory_formdata_view_mapping">
-              image:{" "}
+              image:
               <div>
-                {setImage.map((image, i) => {
+                {setImage?.map((image, i) => {
                   console.log(image, "ksdjfasjdfljalsfd");
                   return (
                     <div
@@ -400,6 +457,14 @@ const CreateProduct = ({ products, categories }) => {
                         alt="delete"
                         width={15}
                         height={15}
+                        onClick={() => {
+                          setSetImage((pre) => {
+                            return pre.filter((img) => {
+                              console.log(img, "ksdjfasjdfljalsfd");
+                              return image.name !== img.name;
+                            });
+                          });
+                        }}
                       />
                       <img
                         src={URL.createObjectURL(image)}
@@ -412,7 +477,24 @@ const CreateProduct = ({ products, categories }) => {
                 })}
               </div>
             </div>
-            <button type="submit">create product</button>
+            <p className="createProduct_error">
+              {formData?.image?.length === 0 && setImage?.length === 0
+                ? error
+                : ""}
+              <br />
+              {imageError && imageError}
+            </p>
+
+            <button
+              type="submit"
+              className={
+                isUploading
+                  ? "createProductSubmitButton"
+                  : "createProductSubmitButton"
+              }
+            >
+              {isUploading ? "Uploading" : "create product"}
+            </button>
           </form>
         </div>
       </div>

@@ -7,7 +7,10 @@ const Products = ({ products }) => {
           <div className="product_items" key={product._id}>
             <div>
               {product.image.map((img) => {
-                return <img key={img._id} src={img.url} alt="product-image" />;
+                console.log(img, "asdfjlasdjlfnajsldnf");
+                return (
+                  <img key={img._id} src={img?.imageFile?.secure_url} alt="product-image" />
+                );
               })}
             </div>
             <h3>{product.productName}</h3>

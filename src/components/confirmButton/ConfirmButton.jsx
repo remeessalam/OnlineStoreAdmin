@@ -1,5 +1,5 @@
 import "./ConfirmButton.css";
-const ConfirmButton = ({ fun, condition, text }) => {
+const ConfirmButton = ({ fun, condition, text, type }) => {
   return (
     <button
       onClick={!condition && fun}

@@ -24,11 +24,11 @@ export const UploadImage = async (images) => {
         return { imageFile: data };
       })
     );
-    const tryapi = await fetch("http://localhost:3000/api/category/image", {
-      method: "POST",
-      body: JSON.stringify({ msg: "hai" }),
-    });
-    console.log(tryapi, "thisistryapi");
+    // const tryapi = await fetch("http://localhost:3000/api/category/image", {
+    //   method: "POST",
+    //   body: JSON.stringify({ msg: "hai" }),
+    // });
+    // console.log(tryapi, "thisistryapi");
     console.log(uploadedImages, "Uploaded images");
     if (uploadedImages) {
       return uploadedImages;
