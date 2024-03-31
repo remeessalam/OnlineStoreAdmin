@@ -8,6 +8,7 @@ h4 {
 }
 .main_container_product {
   display: flex;
+  justify-content: center;
   /* width: 55%; */
   flex-direction: row;
   margin: 8px;
@@ -19,6 +20,9 @@ h4 {
 .createProduct_group {
   display: flex;
   flex-direction: row;
+  border: 1px solid rgb(155, 147, 147);
+  border-radius: 1rem;
+  box-shadow: 0px 0px 14px -1px rgba(0,0,0,0.75);
 }
 .form_main {
   display: flex;

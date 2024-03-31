@@ -1,36 +1,26 @@
 import { useEffect, useState } from "react";
 import CreateProduct from "../../components/createProduct/CreateProduct";
 import Products from "../../components/products/Products";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProducts } from "../../features/product/productSlice";
+import { fetchCategories } from "../../features/category/categorySlice";
 
 const Product = () => {
-  const [products, setProducts] = useState();
-  const [categories, setCategories] = useState();
+  const dispatch = useDispatch();
   useEffect(() => {
-    fetchproducts();
-    fetchCategories();
-  }, []);
-  const fetchCategories = () => {
-    fetch("http://localhost:3000/api/category").then((res) => {
-      res.json().then((categories) => {
-        setCategories(categories?.categories);
-        // console.log(categories, "categories");
-      });
-    });
-  };
-  const fetchproducts = () => {
-    fetch("http://localhost:3000/api/product").then((res) => {
-      res.json().then((products) => {
-        // console.log(products, "products");
-        setProducts(products?.products);
+    dispatch(fetchProducts());
+    dispatch(fetchCategories());
 
-        // setCategories(categories);
-      });
-    });
-  };
+    // fetchproducts();
+    // fetchCategories();
+  }, []);
+  const products = useSelector((state) => state.products.productList);
+  const categories = useSelector((state) => state.category.categoryValue);
+
   return (
     <div>
       <CreateProduct products={products} categories={categories} />
-      <Products products={products}/>
+      <Products products={products} />
     </div>
   );
 };

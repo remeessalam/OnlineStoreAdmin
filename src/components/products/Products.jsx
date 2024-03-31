@@ -1,36 +1,30 @@
+import React from "react";
 import "./Products.css";
+
 const Products = ({ products }) => {
+  console.log(products, "adsnfljjasdlfjlajsdf");
   return (
-    <div className="product_list_container">
-      {products?.map((product) => {
-        return (
-          <div className="product_items" key={product._id}>
-            <div>
-              {product.image.map((img) => {
-                console.log(img, "asdfjlasdjlfnajsldnf");
-                return (
-                  <img key={img._id} src={img?.imageFile?.secure_url} alt="product-image" />
-                );
-              })}
+    <div className="product-list-container">
+      <div className="product-list-filter-container">Filter</div>
+      <div className="product-list-products">
+        {products?.map((product) => (
+          <div className="product-list-item" key={product._id}>
+            <img
+              src={product?.image[2]?.imageFile?.secure_url}
+              alt="product"
+              className="product-list-item-image"
+            />
+            <div className="product-list-item-details">
+              <h5>{product?.productName}</h5>
+              <hr />
+              <h5 className="product-list-item-category">
+                {product?.categoryOf?.categoryName}
+              </h5>
+              <h5>&#x20b9; {product?.price?.$numberDecimal}</h5>
             </div>
-            <h3>{product.productName}</h3>
-            <h3>{product.price.$numberDecimal}</h3>
-            <div className="product_sizeChart_Container">
-              {product.sizeChart.map((sizes) => {
-                return (
-                  <div className="product_sizeChart_items" key={sizes._id}>
-                    <h4>{sizes.size}</h4>
-                    <h4>{sizes.stock}</h4>
-                  </div>
-                );
-              })}
-            </div>
-            <h3>{product.productDetails}</h3>
-            <h3>{product.productDescription}</h3>
-            <h3>{product.stockCount}</h3>
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 };

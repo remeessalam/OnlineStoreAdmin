@@ -91,7 +91,7 @@ const CreateProduct = ({ products, categories }) => {
   };
   const handleImageChange = (e) => {
     const images = Object.values(e.target.files);
-    if (images.length > 2) {
+    if (images.length > 5) {
       setImageError("only two image can add");
       return;
     }
@@ -312,11 +312,15 @@ const CreateProduct = ({ products, categories }) => {
             </p>
             <div className="form_each_div">
               <h4>product details</h4>
-              <input
+              {/* <input
                 type="text"
+              
+              /> */}
+              <textarea
                 name="productDetails"
                 value={formData.productDetails}
                 onChange={handleChange}
+                rows={4}
               />
             </div>
             <p className="createProduct_error">
@@ -324,12 +328,18 @@ const CreateProduct = ({ products, categories }) => {
             </p>
             <div className="form_each_div">
               <h4>product description</h4>
-              <input
+              <textarea
+                name="productDescription"
+                value={formData.productDescription}
+                onChange={handleChange}
+                rows={4}
+              />
+              {/* <input
                 type="text"
                 name="productDescription"
                 value={formData.productDescription}
                 onChange={handleChange}
-              />
+              /> */}
             </div>
             <p className="createProduct_error">
               {formData.productDescription.length === 0 && error}
@@ -414,7 +424,9 @@ const CreateProduct = ({ products, categories }) => {
                       key={category._id}
                       value={`${category.categoryName}_${category._id}`}
                     >
-                      {category.categoryName}
+                      {category?.categoryName}
+                      <br />
+                      {category?.categoryFor}
                     </MenuItem>
                   ))}
                 </Select>
